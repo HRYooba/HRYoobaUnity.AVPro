@@ -10,7 +10,6 @@
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
       "scopes": [
-        "com.openupm",
         "com.neuecc.unirx",
         "com.cysharp"
       ]
