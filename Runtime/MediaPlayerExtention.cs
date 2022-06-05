@@ -39,8 +39,7 @@ namespace HRYooba.Library
                     Debug.Log($"Opened Media: {path} {mediaPlayer.Info.GetVideoWidth()}x{mediaPlayer.Info.GetVideoHeight()} FPS{mediaPlayer.Info.GetVideoFrameRate().ToString("F2")} Duration{mediaPlayer.Info.GetDuration()}");
                 });
 
-                // デバッグログが出力終わるまでawaitで待ってもいい。その場合は await showDebugLogAsync();
-                showDebugLogAsync.Forget();
+                await showDebugLogAsync;
             }
             catch
             {
