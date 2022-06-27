@@ -10,7 +10,7 @@ namespace HRYooba.Library
     /// <summary>
     /// AVProのMediaPlayerの拡張
     /// </summary>
-    public static class MediaPlayerExtention
+    public static class MediaPlayerExtension
     {
         /// <summary>
         /// OpenMediaの非同期
