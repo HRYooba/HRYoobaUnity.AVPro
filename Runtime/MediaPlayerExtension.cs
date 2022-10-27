@@ -48,6 +48,20 @@ namespace HRYooba.Library
         }
 
         /// <summary>
+        /// OpenMediaの非同期
+        /// </summary>
+        /// <param name="mediaPlayer">self</param>
+        /// <param name="reference">MediaReference</param>
+        /// <param name="cancellationToken">CancellationToken</param>
+        /// <param name="autoPlay">自動再生するか</param>
+        /// <param name="timeout">タイムアウト処理の秒数</param>
+        /// <returns></returns>
+        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, MediaReference reference, CancellationToken cancellationToken, bool autoPlay = false, float timeout = 5.0f)
+        {
+            await mediaPlayer.OpenMediaAsync(reference.MediaPath.Path, cancellationToken, reference.MediaPath.PathType, autoPlay, timeout);
+        }
+
+        /// <summary>
         /// 再生終了のIObservable
         /// </summary>
         /// <param name="mediaPlayer">self</param>
