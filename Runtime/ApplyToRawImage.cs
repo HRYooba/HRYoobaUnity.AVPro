@@ -11,6 +11,13 @@ namespace HRYooba.Library
         [SerializeField] private RawImage _image = null;
         [SerializeField] private MediaPlayer _mediaPlayer = null;
 
+        private void OnEnable()
+        {
+            if (_image == null) return;
+            
+            _image.texture = _defaultTexture;
+        }
+
         private void OnDisable()
         {
             if (_image == null) return;
