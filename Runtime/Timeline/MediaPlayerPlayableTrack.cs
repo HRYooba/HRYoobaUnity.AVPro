@@ -12,37 +12,34 @@ namespace HRYooba.Library
     [TrackClipType(typeof(MediaPlayerPlayableClip))]
     public class MediaPlayerPlayableTrack : TrackAsset
     {
-        private PlayableDirector _director = null;
-
-        public override void GatherProperties(PlayableDirector director, IPropertyCollector driver)
+        protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
         {
-            _director = director;
-            base.GatherProperties(director, driver);
-        }
+            var mediaPlayerClip = clip.asset as MediaPlayerPlayableClip;
+            var director = gameObject.GetComponent<PlayableDirector>();
+            var mediaPlayer = director.GetGenericBinding(this) as MediaPlayer;
 
-        protected override void OnCreateClip(TimelineClip clip)
-        {
-#if UNITY_EDITOR
-            if (Application.isPlaying) return;
+            mediaPlayerClip.SetMediaPlayer(mediaPlayer);
+            mediaPlayerClip.SetPlayableDirector(director);
 
-            if (_director != null)
+            if (mediaPlayer != null)
             {
-                var mediaPlayer = _director.GetGenericBinding(this) as MediaPlayer;
-                if (mediaPlayer != null)
+                if (!mediaPlayer.MediaOpened)
                 {
-                    if (!mediaPlayer.MediaOpened)
-                    {
-                        mediaPlayer.OpenMedia(false);
-                    }
-
-                    mediaPlayer.EditorUpdate();
-                    
-                    clip.duration = mediaPlayer.Info.GetDuration();
+                    mediaPlayer.OpenMedia(false);
                 }
-            }
-#endif
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    mediaPlayer.EditorUpdate();
 
-            base.OnCreateClip(clip);
+                    // clipの長さをMediaPlayerの長さに合わせる
+                    clip.duration = mediaPlayer.Info.GetDuration();
+
+                }
+#endif
+            }
+
+            return base.CreatePlayable(graph, gameObject, clip);
         }
     }
 }

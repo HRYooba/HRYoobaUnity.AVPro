@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Playables;
+using UnityEngine.Timeline;
 using RenderHeads.Media.AVProVideo;
 
 namespace HRYooba.Library
@@ -10,12 +11,26 @@ namespace HRYooba.Library
     {
         private const double Threshold = 0.1;
 
-        private PlayableDirector _director = null;
         private MediaPlayer _mediaPlayer = null;
+        private PlayableDirector _director = null;
+
+        public void SetMediaPlayer(MediaPlayer mediaPlayer)
+        {
+            _mediaPlayer = mediaPlayer;
+        }
 
         public void SetPlayableDirector(PlayableDirector director)
         {
             _director = director;
+        }
+
+        public override void OnGraphStop(Playable playable)
+        {
+            if (_mediaPlayer == null) return;
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying) _mediaPlayer.ForceDispose();
+#endif
         }
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
@@ -30,14 +45,10 @@ namespace HRYooba.Library
             if (_mediaPlayer == null) return;
 
             _mediaPlayer.Control?.Stop();
-#if UNITY_EDITOR
-            if (!Application.isPlaying) _mediaPlayer.ForceDispose();
-#endif
         }
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            _mediaPlayer = playerData as MediaPlayer;
             if (_mediaPlayer == null) return;
 
             // MediaPlayerがOpenされていない場合はOpenする
@@ -66,7 +77,7 @@ namespace HRYooba.Library
             {
                 _mediaPlayer.Control.Seek(time);
             }
-            
+
             // PlayableDirectorの再生停止とMediaPlayerの再生停止の同期
             if (!_director.playableGraph.IsPlaying())
             {
