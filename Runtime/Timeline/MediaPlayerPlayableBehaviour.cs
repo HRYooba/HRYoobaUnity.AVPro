@@ -9,10 +9,10 @@ namespace HRYooba.Library
     [Serializable]
     public class MediaPlayerPlayableBehaviour : PlayableBehaviour
     {
-        private const double Threshold = 0.1;
-
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
+        private double _seekThreshold = 0.1;
+        private float _playbackRate = 1.0f;
 
         public void SetMediaPlayer(MediaPlayer mediaPlayer)
         {
@@ -22,6 +22,16 @@ namespace HRYooba.Library
         public void SetPlayableDirector(PlayableDirector director)
         {
             _director = director;
+        }
+
+        public void SetSeekThreshold(double threshold)
+        {
+            _seekThreshold = threshold;
+        }
+
+        public void SetPlaybackRate(float playbackRate)
+        {
+            _playbackRate = playbackRate;
         }
 
         public override void OnGraphStop(Playable playable)
@@ -70,10 +80,13 @@ namespace HRYooba.Library
                 _mediaPlayer.Control.Play();
             }
 
+            // 再生速度を設定
+            _mediaPlayer.Control?.SetPlaybackRate(_playbackRate);
+
             // シークと再生の同期
-            var time = playable.GetTime();
-            var substraction = time - _mediaPlayer.Control.GetCurrentTime();
-            if (substraction > Threshold || substraction < -Threshold)
+            var time = (playable.GetTime() * _mediaPlayer.Control.GetPlaybackRate()) % _mediaPlayer.Info.GetDuration();
+            var delta = time - _mediaPlayer.Control.GetCurrentTime();
+            if (delta > _seekThreshold || delta < -_seekThreshold)
             {
                 _mediaPlayer.Control.Seek(time);
             }

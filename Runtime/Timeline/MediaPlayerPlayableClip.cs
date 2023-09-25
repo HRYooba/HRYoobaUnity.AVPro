@@ -9,6 +9,9 @@ namespace HRYooba.Library
     [Serializable]
     public class MediaPlayerPlayableClip : PlayableAsset, ITimelineClipAsset
     {
+        [SerializeField, Range(0.0001f, 1f)] private double _seekThreshold = 0.1;
+        [SerializeField] private float _playbackRate = 1.0f;
+
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
 
@@ -28,9 +31,11 @@ namespace HRYooba.Library
         {
             var playable = ScriptPlayable<MediaPlayerPlayableBehaviour>.Create(graph);
             var behaviour = playable.GetBehaviour();
-            
+
             behaviour.SetMediaPlayer(_mediaPlayer);
             behaviour.SetPlayableDirector(_director);
+            behaviour.SetSeekThreshold(_seekThreshold);
+            behaviour.SetPlaybackRate(_playbackRate);
 
             return playable;
         }
