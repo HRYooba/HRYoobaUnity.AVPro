@@ -21,8 +21,6 @@ namespace HRYooba.Library
 
         protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
         {
-            Debug.Log("CreatePlayable");
-
             var mediaPlayerClip = clip.asset as MediaPlayerPlayableClip;
             var mediaPlayer = _director.GetGenericBinding(this) as MediaPlayer;
 
@@ -43,8 +41,6 @@ namespace HRYooba.Library
 #if UNITY_EDITOR
         protected override void OnCreateClip(TimelineClip clip)
         {
-            Debug.Log("OnCreateClip");
-
             var mediaPlayer = _director.GetGenericBinding(this) as MediaPlayer;
             if (mediaPlayer != null)
             {
