@@ -16,13 +16,45 @@ namespace HRYooba.Library
         /// OpenMediaの非同期
         /// </summary>
         /// <param name="mediaPlayer">self</param>
+        /// <param name="cancellationToken">CancellationToken</param>
+        /// <param name="autoPlay">自動再生するか</param>
+        /// <param name="showLog">ログを表示するか</param>
+        /// <param name="timeout">タイムアウト処理の秒数</param>
+        /// <returns></returns>
+        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, CancellationToken cancellationToken, bool autoPlay = true, bool showLog = false, float timeout = 5.0f)
+        {
+            try
+            {
+                // Media open
+                mediaPlayer.OpenMedia(autoPlay);
+
+                // Mediaが開けるまで待機
+                await UniTask.WaitWhile(() => !mediaPlayer.MediaOpened).Timeout(TimeSpan.FromSeconds(timeout));
+                await UniTask.Yield(cancellationToken: cancellationToken);
+
+                if (showLog)
+                {
+                    Debug.Log($"Opened Media: {mediaPlayer.MediaPath.Path} {mediaPlayer.Info.GetVideoWidth()}x{mediaPlayer.Info.GetVideoHeight()} FPS{mediaPlayer.Info.GetVideoFrameRate().ToString("F2")} Duration{mediaPlayer.Info.GetDuration()}");
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// OpenMediaの非同期
+        /// </summary>
+        /// <param name="mediaPlayer">self</param>
         /// <param name="path">パス</param>
         /// <param name="cancellationToken">CancellationToken</param>
         /// <param name="pathType">パスタイプ</param>
         /// <param name="autoPlay">自動再生するか</param>
+        /// <param name="showLog">ログを表示するか</param>
         /// <param name="timeout">タイムアウト処理の秒数</param>
         /// <returns></returns>
-        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, string path, CancellationToken cancellationToken, MediaPathType pathType = MediaPathType.AbsolutePathOrURL, bool autoPlay = false, float timeout = 5.0f)
+        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, string path, CancellationToken cancellationToken, MediaPathType pathType = MediaPathType.AbsolutePathOrURL, bool autoPlay = true, bool showLog = false, float timeout = 5.0f)
         {
             try
             {
@@ -31,15 +63,12 @@ namespace HRYooba.Library
 
                 // Mediaが開けるまで待機
                 await UniTask.WaitWhile(() => !mediaPlayer.MediaOpened).Timeout(TimeSpan.FromSeconds(timeout));
+                await UniTask.Yield(cancellationToken: cancellationToken);
 
-                // Create DebugLog Task
-                var showDebugLogAsync = UniTask.Create(async () =>
+                if (showLog)
                 {
-                    await UniTask.WaitWhile(() => mediaPlayer.Info.GetVideoFrameRate() == 0, cancellationToken: cancellationToken);
-                    Debug.Log($"Opened Media: {path} {mediaPlayer.Info.GetVideoWidth()}x{mediaPlayer.Info.GetVideoHeight()} FPS{mediaPlayer.Info.GetVideoFrameRate().ToString("F2")} Duration{mediaPlayer.Info.GetDuration()}");
-                });
-
-                await showDebugLogAsync;
+                    Debug.Log($"Opened Media: {mediaPlayer.MediaPath.Path} {mediaPlayer.Info.GetVideoWidth()}x{mediaPlayer.Info.GetVideoHeight()} FPS{mediaPlayer.Info.GetVideoFrameRate().ToString("F2")} Duration{mediaPlayer.Info.GetDuration()}");
+                }
             }
             catch
             {
@@ -54,11 +83,12 @@ namespace HRYooba.Library
         /// <param name="reference">MediaReference</param>
         /// <param name="cancellationToken">CancellationToken</param>
         /// <param name="autoPlay">自動再生するか</param>
+        /// <param name="showLog">ログを表示するか</param>
         /// <param name="timeout">タイムアウト処理の秒数</param>
         /// <returns></returns>
-        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, MediaReference reference, CancellationToken cancellationToken, bool autoPlay = false, float timeout = 5.0f)
+        public static async UniTask OpenMediaAsync(this MediaPlayer mediaPlayer, MediaReference reference, CancellationToken cancellationToken, bool autoPlay = true, bool showLog = false, float timeout = 5.0f)
         {
-            await mediaPlayer.OpenMediaAsync(reference.MediaPath.Path, cancellationToken, reference.MediaPath.PathType, autoPlay, timeout);
+            await mediaPlayer.OpenMediaAsync(reference.MediaPath.Path, cancellationToken, reference.MediaPath.PathType, autoPlay, showLog, timeout);
         }
 
         /// <summary>
