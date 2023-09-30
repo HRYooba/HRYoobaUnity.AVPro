@@ -11,6 +11,7 @@ namespace HRYooba.Library
     {
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
+        private bool _isTimeSync = true;
         private double _seekThreshold = 0.1;
         private float _playbackRate = 1.0f;
 
@@ -22,6 +23,11 @@ namespace HRYooba.Library
         public void SetPlayableDirector(PlayableDirector director)
         {
             _director = director;
+        }
+
+        public void SetTimeSync(bool isTimeSync)
+        {
+            _isTimeSync = isTimeSync;
         }
 
         public void SetSeekThreshold(double threshold)
@@ -82,6 +88,9 @@ namespace HRYooba.Library
 
             // 再生速度を設定
             _mediaPlayer.Control?.SetPlaybackRate(_playbackRate);
+
+            // Time同期が無効なら処理を終了
+            if (!_isTimeSync) return;
 
             // シークと再生の同期
             var time = (playable.GetTime() * _mediaPlayer.Control.GetPlaybackRate()) % _mediaPlayer.Info.GetDuration();
