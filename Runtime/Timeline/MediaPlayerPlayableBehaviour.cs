@@ -12,6 +12,7 @@ namespace HRYooba.Library
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
         private bool _isTimeSync = true;
+        private bool _isAutoRewind = true;
         private double _seekThreshold = 0.1;
         private float _playbackRate = 1.0f;
 
@@ -28,6 +29,11 @@ namespace HRYooba.Library
         public void SetTimeSync(bool isTimeSync)
         {
             _isTimeSync = isTimeSync;
+        }
+
+        public void SetAutoRewind(bool isAutoRewind)
+        {
+            _isAutoRewind = isAutoRewind;
         }
 
         public void SetSeekThreshold(double threshold)
@@ -54,6 +60,7 @@ namespace HRYooba.Library
             if (_mediaPlayer == null) return;
 
             _mediaPlayer.Control?.Stop();
+            if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
@@ -61,6 +68,7 @@ namespace HRYooba.Library
             if (_mediaPlayer == null) return;
 
             _mediaPlayer.Control?.Stop();
+            if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
