@@ -18,6 +18,8 @@ namespace HRYooba.Library
         private double _seekThreshold = 0.1;
         private float _playbackRate = 1.0f;
 
+        private bool _canInit = false;
+
         public void SetMediaPlayer(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;
@@ -69,15 +71,14 @@ namespace HRYooba.Library
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
-            if (_mediaPlayer == null) return;
-
-            if (_isAutoRewind) _mediaPlayer.Rewind(true);
+            _canInit = true;
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
-            if (_mediaPlayer == null) return;
+            _canInit = false;
 
+            if (_mediaPlayer == null) return;
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
@@ -98,16 +99,20 @@ namespace HRYooba.Library
             if (_mediaPlayer.Control == null) return;
             if (_mediaPlayer.Info == null) return;
 
+            // 初回のみ設定を行う
+            if (_canInit)
+            {
+                _mediaPlayer.Control.SetPlaybackRate(_playbackRate);
+                _mediaPlayer.Control.SetLooping(_isLoop);
+                _mediaPlayer.Control.Seek(_startTime);
+                _canInit = false;
+            }
+
             // 再生中でなければ再生する
             if (!_mediaPlayer.Control.IsPlaying())
             {
                 _mediaPlayer.Control.Play();
-                _mediaPlayer.Control.SetLooping(_isLoop);
-                _mediaPlayer.Control.Seek(_startTime);
             }
-
-            // 再生速度を設定
-            _mediaPlayer.Control.SetPlaybackRate(_playbackRate);
 
             // Time同期が無効なら処理を終了
             if (!_isTimeSync) return;
