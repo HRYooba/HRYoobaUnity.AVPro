@@ -12,7 +12,9 @@ namespace HRYooba.Library
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
         private bool _isTimeSync = true;
-        private bool _isAutoRewind = true;
+        private bool _isAutoRewind = false;
+        private bool _isLoop = false;
+        private double _startTime = 0.0;
         private double _seekThreshold = 0.1;
         private float _playbackRate = 1.0f;
 
@@ -34,6 +36,16 @@ namespace HRYooba.Library
         public void SetAutoRewind(bool isAutoRewind)
         {
             _isAutoRewind = isAutoRewind;
+        }
+
+        public void SetLoop(bool isLoop)
+        {
+            _isLoop = isLoop;
+        }
+
+        public void SetStartTime(double startTime)
+        {
+            _startTime = startTime;
         }
 
         public void SetSeekThreshold(double threshold)
@@ -59,7 +71,6 @@ namespace HRYooba.Library
         {
             if (_mediaPlayer == null) return;
 
-            _mediaPlayer.Control?.Stop();
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
@@ -67,7 +78,6 @@ namespace HRYooba.Library
         {
             if (_mediaPlayer == null) return;
 
-            _mediaPlayer.Control?.Stop();
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
@@ -92,16 +102,27 @@ namespace HRYooba.Library
             if (!_mediaPlayer.Control.IsPlaying())
             {
                 _mediaPlayer.Control.Play();
+                _mediaPlayer.Control.SetLooping(_isLoop);
+                _mediaPlayer.Control.Seek(_startTime);
             }
 
             // 再生速度を設定
-            _mediaPlayer.Control?.SetPlaybackRate(_playbackRate);
+            _mediaPlayer.Control.SetPlaybackRate(_playbackRate);
 
             // Time同期が無効なら処理を終了
             if (!_isTimeSync) return;
 
             // シークと再生の同期
-            var time = (playable.GetTime() * _mediaPlayer.Control.GetPlaybackRate()) % _mediaPlayer.Info.GetDuration();
+            var time = playable.GetTime() * _mediaPlayer.Control.GetPlaybackRate() + _startTime;
+            if (_isLoop)
+            {
+                time %= _mediaPlayer.Info.GetDuration();
+            }
+            else
+            {
+                time = Mathf.Clamp((float)time, 0f, (float)_mediaPlayer.Info.GetDuration());
+            }
+
             var delta = time - _mediaPlayer.Control.GetCurrentTime();
             if (delta > _seekThreshold || delta < -_seekThreshold)
             {
