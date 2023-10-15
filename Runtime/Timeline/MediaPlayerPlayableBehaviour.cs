@@ -12,6 +12,7 @@ namespace HRYooba.Library
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
         private bool _isTimeSync = true;
+        private bool _isAutoStop = true;
         private bool _isAutoRewind = false;
         private bool _isLoop = false;
         private double _startTime = 0.0;
@@ -33,6 +34,11 @@ namespace HRYooba.Library
         public void SetTimeSync(bool isTimeSync)
         {
             _isTimeSync = isTimeSync;
+        }
+
+        public void SetAutoStop(bool isAutoStop)
+        {
+            _isAutoStop = isAutoStop;
         }
 
         public void SetAutoRewind(bool isAutoRewind)
@@ -79,6 +85,7 @@ namespace HRYooba.Library
             _canInit = false;
 
             if (_mediaPlayer == null) return;
+            if (_isAutoStop) _mediaPlayer.Stop();
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
