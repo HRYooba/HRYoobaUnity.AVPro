@@ -12,7 +12,7 @@ namespace HRYooba.Library
         private MediaPlayer _mediaPlayer = null;
         private PlayableDirector _director = null;
         private bool _isTimeSync = true;
-        private bool _isAutoStop = true;
+        private bool _isAutoPause = true;
         private bool _isAutoRewind = false;
         private bool _isLoop = false;
         private double _startTime = 0.0;
@@ -36,9 +36,9 @@ namespace HRYooba.Library
             _isTimeSync = isTimeSync;
         }
 
-        public void SetAutoStop(bool isAutoStop)
+        public void SetAutoPause(bool isAutoPause)
         {
-            _isAutoStop = isAutoStop;
+            _isAutoPause = isAutoPause;
         }
 
         public void SetAutoRewind(bool isAutoRewind)
@@ -66,13 +66,22 @@ namespace HRYooba.Library
             _playbackRate = playbackRate;
         }
 
-        public override void OnGraphStop(Playable playable)
+// #if UNITY_EDITOR
+//         public override void OnPlayableDestroy(Playable playable)
+//         {
+//             if (_mediaPlayer == null) return;
+//             if (!Application.isPlaying) _mediaPlayer.ForceDispose();
+//         }
+// #endif
+
+        public override void OnGraphStart(Playable playable)
         {
             if (_mediaPlayer == null) return;
 
-#if UNITY_EDITOR
-            if (!Application.isPlaying) _mediaPlayer.ForceDispose();
-#endif
+            if (!_mediaPlayer.MediaOpened)
+            {
+                _mediaPlayer.OpenMedia(false);
+            }
         }
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
@@ -85,7 +94,7 @@ namespace HRYooba.Library
             _canInit = false;
 
             if (_mediaPlayer == null) return;
-            if (_isAutoStop) _mediaPlayer.Stop();
+            if (_isAutoPause) _mediaPlayer.Pause();
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
         }
 
@@ -115,9 +124,17 @@ namespace HRYooba.Library
                 _canInit = false;
             }
 
-            // 再生中でなければ再生する
-            if (!_mediaPlayer.Control.IsPlaying())
+            if (_mediaPlayer.Control.IsPlaying())
             {
+                // PlayableDirectorの再生停止とMediaPlayerの再生停止の同期
+                if (!_director.playableGraph.IsPlaying())
+                {
+                    _mediaPlayer.Control.Pause();
+                }
+            }
+            else
+            {
+                // 再生中でなければ再生する
                 _mediaPlayer.Control.Play();
             }
 
@@ -139,15 +156,6 @@ namespace HRYooba.Library
             if (delta > _seekThreshold || delta < -_seekThreshold)
             {
                 _mediaPlayer.Control.Seek(time);
-            }
-
-            // PlayableDirectorの再生停止とMediaPlayerの再生停止の同期
-            if (!_director.playableGraph.IsPlaying())
-            {
-                if (_mediaPlayer.Control.IsPlaying())
-                {
-                    _mediaPlayer.Control.Stop();
-                }
             }
         }
     }

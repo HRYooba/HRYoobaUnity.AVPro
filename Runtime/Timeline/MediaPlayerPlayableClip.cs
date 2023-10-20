@@ -14,7 +14,7 @@ namespace HRYooba.Library
         [SerializeField, Range(0.0001f, 1f)] private double _seekThreshold = 0.1;
 
         [Header("MediaPlayer Settings")]
-        [SerializeField] private bool _isAutoStop = true;
+        [SerializeField] private bool _isAutoPause = true;
         [SerializeField] private bool _isAutoRewind = false;
         [SerializeField] private bool _isLoop = false;
         [SerializeField] private double _startTime = 0.0;
@@ -43,6 +43,7 @@ namespace HRYooba.Library
             behaviour.SetMediaPlayer(_mediaPlayer);
             behaviour.SetPlayableDirector(_director);
             behaviour.SetTimeSync(_isTimeSync);
+            behaviour.SetAutoPause(_isAutoPause);
             behaviour.SetAutoRewind(_isAutoRewind);
             behaviour.SetLoop(_isLoop);
             behaviour.SetStartTime(_startTime);

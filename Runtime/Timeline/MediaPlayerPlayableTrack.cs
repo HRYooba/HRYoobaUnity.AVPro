@@ -22,20 +22,12 @@ namespace HRYooba.Library
         protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
         {
             if (_director == null) _director = gameObject.GetComponent<PlayableDirector>();
-            
+
             var mediaPlayerClip = clip.asset as MediaPlayerPlayableClip;
             var mediaPlayer = _director.GetGenericBinding(this) as MediaPlayer;
 
             mediaPlayerClip.SetMediaPlayer(mediaPlayer);
             mediaPlayerClip.SetPlayableDirector(_director);
-
-            if (mediaPlayer != null)
-            {
-                if (!mediaPlayer.MediaOpened)
-                {
-                    mediaPlayer.OpenMedia(false);
-                }
-            }
 
             return base.CreatePlayable(graph, gameObject, clip);
         }
