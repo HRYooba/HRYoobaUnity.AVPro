@@ -20,10 +20,18 @@ namespace HRYooba.Library
         private float _playbackRate = 1.0f;
 
         private bool _canInit = false;
+        private bool _canSeek = true;
 
         public void SetMediaPlayer(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;
+            
+            var isMp4 = _mediaPlayer.MediaPath.Path.EndsWith(".mp4");
+
+            // DirectShow&mp4の場合は強制シークするとEditorが落ちる
+            // DirectShow&hap(mov), MediaFoundation&mp4は動作確認済み
+            _canSeek = !(isMp4 && _mediaPlayer.PlatformOptionsWindows.videoApi == Windows.VideoApi.DirectShow);
+            if (!_canSeek) Debug.LogWarning("[MediaPlayerPlayable] DirectShow&mp4の場合はTimelineのシークするとEditorが落ちるのでTimelineのシークと再生の同期は無効になります");
         }
 
         public void SetPlayableDirector(PlayableDirector director)
@@ -66,13 +74,13 @@ namespace HRYooba.Library
             _playbackRate = playbackRate;
         }
 
-// #if UNITY_EDITOR
-//         public override void OnPlayableDestroy(Playable playable)
-//         {
-//             if (_mediaPlayer == null) return;
-//             if (!Application.isPlaying) _mediaPlayer.ForceDispose();
-//         }
-// #endif
+        // #if UNITY_EDITOR
+        //         public override void OnPlayableDestroy(Playable playable)
+        //         {
+        //             if (_mediaPlayer == null) return;
+        //             if (!Application.isPlaying) _mediaPlayer.ForceDispose();
+        //         }
+        // #endif
 
         public override void OnGraphStart(Playable playable)
         {
@@ -91,8 +99,6 @@ namespace HRYooba.Library
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
-            _canInit = false;
-
             if (_mediaPlayer == null) return;
             if (_isAutoPause) _mediaPlayer.Pause();
             if (_isAutoRewind) _mediaPlayer.Rewind(true);
@@ -140,6 +146,7 @@ namespace HRYooba.Library
 
             // Time同期が無効なら処理を終了
             if (!_isTimeSync) return;
+            if (!_canSeek) return;
 
             // シークと再生の同期
             var time = playable.GetTime() * _mediaPlayer.Control.GetPlaybackRate() + _startTime;
@@ -149,7 +156,15 @@ namespace HRYooba.Library
             }
             else
             {
-                time = Mathf.Clamp((float)time, 0f, (float)_mediaPlayer.Info.GetDuration());
+                // clamp処理
+                if (time <= 0.0)
+                {
+                    time = 0.0;
+                }
+                if (time >= _mediaPlayer.Info.GetDuration())
+                {
+                    time = _mediaPlayer.Info.GetDuration();
+                }
             }
 
             var delta = time - _mediaPlayer.Control.GetCurrentTime();
