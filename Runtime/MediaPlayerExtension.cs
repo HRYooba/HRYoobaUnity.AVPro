@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using RenderHeads.Media.AVProVideo;
-using Cysharp.Threading.Tasks;
-using UniRx;
+using R3;
 
 namespace HRYooba.Library
 {
@@ -96,7 +96,7 @@ namespace HRYooba.Library
         /// </summary>
         /// <param name="mediaPlayer">self</param>
         /// <returns></returns>
-        public static IObservable<Unit> OnFinishedPlaying(this MediaPlayer mediaPlayer)
+        public static Observable<Unit> OnFinishedPlaying(this MediaPlayer mediaPlayer)
         {
             return mediaPlayer.Events.AsObservable().Where(args => args.Item2 == MediaPlayerEvent.EventType.FinishedPlaying).AsUnitObservable();
         }
