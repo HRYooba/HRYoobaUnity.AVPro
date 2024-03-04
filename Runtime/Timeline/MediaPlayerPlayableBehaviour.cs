@@ -13,7 +13,7 @@ namespace HRYooba.Library
         private PlayableDirector _director = null;
         private bool _isTimeSync = true;
         private bool _isAutoPause = true;
-        private bool _isAutoRewind = false;
+        private bool _isAutoRewind = true;
         private bool _isLoop = false;
         private double _startTime = 0.0;
         private double _seekThreshold = 0.1;

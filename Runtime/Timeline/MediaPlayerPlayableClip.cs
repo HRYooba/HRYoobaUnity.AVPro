@@ -15,7 +15,7 @@ namespace HRYooba.Library
 
         [Header("MediaPlayer Settings")]
         [SerializeField] private bool _isAutoPause = true;
-        [SerializeField] private bool _isAutoRewind = false;
+        [SerializeField] private bool _isAutoRewind = true;
         [SerializeField] private bool _isLoop = false;
         [SerializeField] private double _startTime = 0.0;
         [SerializeField] private float _playbackRate = 1.0f;
