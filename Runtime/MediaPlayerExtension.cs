@@ -92,13 +92,30 @@ namespace HRYooba.Library
         }
 
         /// <summary>
-        /// 再生終了のIObservable
+        /// Playの非同期
         /// </summary>
-        /// <param name="mediaPlayer">self</param>
+        /// <param name="mediaPlayer"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static Observable<Unit> OnFinishedPlaying(this MediaPlayer mediaPlayer)
+        public static async UniTask PlayAsync(this MediaPlayer mediaPlayer, CancellationToken cancellationToken)
         {
-            return mediaPlayer.Events.AsObservable().Where(args => args.Item2 == MediaPlayerEvent.EventType.FinishedPlaying).AsUnitObservable();
+            await mediaPlayer.EventsAsObservable().Where(_ => _.EventType == MediaPlayerEvent.EventType.FinishedPlaying).FirstAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Events as Observable
+        /// </summary>
+        /// <param name="MediaPlayer"></param>
+        /// <param name="EventType"></param>
+        /// <param name="mediaPlayer"></param>
+        public static Observable<(MediaPlayer MediaPlayer, MediaPlayerEvent.EventType EventType, ErrorCode ErrorCode)> EventsAsObservable(this MediaPlayer mediaPlayer)
+        {
+            if (!mediaPlayer.Events.HasListeners())
+            {
+                mediaPlayer.Events.AddListener((mp, e, c) => { });
+            }
+
+            return mediaPlayer.Events.AsObservable();
         }
     }
 }
