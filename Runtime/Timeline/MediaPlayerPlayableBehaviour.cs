@@ -25,7 +25,7 @@ namespace HRYooba.Library
         public void SetMediaPlayer(MediaPlayer mediaPlayer)
         {
             _mediaPlayer = mediaPlayer;
-            
+
             var isMp4 = _mediaPlayer.MediaPath.Path.EndsWith(".mp4");
 
             // DirectShow&mp4の場合は強制シークするとEditorが落ちる
@@ -132,10 +132,20 @@ namespace HRYooba.Library
 
             if (_mediaPlayer.Control.IsPlaying())
             {
-                // PlayableDirectorの再生停止とMediaPlayerの再生停止の同期
-                if (!_director.playableGraph.IsPlaying())
+                try
                 {
+                    // PlayableDirectorの再生停止とMediaPlayerの再生停止の同期
+                    if (!_director.playableGraph.IsPlaying())
+                    {
+                        _mediaPlayer.Control.Pause();
+                        return;
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    // ControlTrackにした際に　NullReferenceException: The PlayableGraph is null.の対策
                     _mediaPlayer.Control.Pause();
+                    return;
                 }
             }
             else
