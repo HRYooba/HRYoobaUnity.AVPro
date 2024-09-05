@@ -1,7 +1,7 @@
 {
   "name": "com.hryooba.library.avpro",
   "displayName": "HRYoobaLibrary.AVPro",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "unity": "2021.3",
   "description": "Unity HRYooba Library\nAVPro Extentions",
   "author": {
@@ -10,6 +10,7 @@
   "type": "library",
   "dependencies": {
     "com.cysharp.unitask": "2.5.1",
-    "com.cysharp.r3": "1.1.2"
+    "com.cysharp.r3": "1.1.2",
+    "org.nuget.r3": "1.2.8"
   }
 }
