@@ -9,9 +9,5 @@ ProjectSetting/PackageManagerから以下のScopeRegistriesを設定
   - `com.cysharp`
   - `org.nuget`
 
-### 1.2 R3のインストール
-https://github.com/Cysharp/R3?tab=readme-ov-file#unity
-を参考にインストールする。 
-
-### 1.3 インストール
+### 1.2 インストール
 PackageManagerからMyRegistriesを選択しパッケージを入れる。

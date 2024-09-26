@@ -30,7 +30,7 @@ namespace HRYooba.Library
 
             // DirectShow&mp4の場合は強制シークするとEditorが落ちる
             // DirectShow&hap(mov), MediaFoundation&mp4は動作確認済み
-            _canSeek = !(isMp4 && _mediaPlayer.PlatformOptionsWindows.videoApi == Windows.VideoApi.DirectShow);
+            _canSeek = !(isMp4 && _mediaPlayer.PlatformOptionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow);
             if (!_canSeek) Debug.LogWarning("[MediaPlayerPlayable] DirectShow&mp4の場合はTimelineのシークするとEditorが落ちるのでTimelineのシークと再生の同期は無効になります");
         }
 
@@ -141,7 +141,7 @@ namespace HRYooba.Library
                         return;
                     }
                 }
-                catch (NullReferenceException e)
+                catch (NullReferenceException)
                 {
                     // ControlTrackにした際に　NullReferenceException: The PlayableGraph is null.の対策
                     _mediaPlayer.Control.Pause();
