@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using RenderHeads.Media.AVProVideo;
 
-namespace HRYooba.Library
+namespace HRYooba.AVPro
 {
     [ExecuteAlways]
     public class ApplyToRawImage : MonoBehaviour

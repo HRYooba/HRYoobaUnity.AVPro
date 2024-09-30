@@ -4,7 +4,7 @@ using UnityEngine.Playables;
 using UnityEngine.Timeline;
 using RenderHeads.Media.AVProVideo;
 
-namespace HRYooba.Library
+namespace HRYooba.AVPro
 {
     [Serializable]
     public class MediaPlayerPlayableBehaviour : PlayableBehaviour

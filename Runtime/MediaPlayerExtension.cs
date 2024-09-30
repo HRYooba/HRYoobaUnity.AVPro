@@ -5,7 +5,7 @@ using UnityEngine;
 using RenderHeads.Media.AVProVideo;
 using R3;
 
-namespace HRYooba.Library
+namespace HRYooba.AVPro
 {
     /// <summary>
     /// AVProのMediaPlayerの拡張

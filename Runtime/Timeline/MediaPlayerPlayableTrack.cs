@@ -4,7 +4,7 @@ using UnityEngine.Timeline;
 using UnityEngine.Playables;
 using RenderHeads.Media.AVProVideo;
 
-namespace HRYooba.Library
+namespace HRYooba.AVPro
 {
     [Serializable]
     [TrackColor(0.855f, 0.8623f, 0.87f)]
