@@ -17,7 +17,6 @@ namespace HRYooba.AVPro
 #if UNITY_EDITOR
         private MethodInfo _updateInternalMaterialMethod;
         private MethodInfo _getDrawingDimensionsMethod;
-        private FieldInfo _isUserMaterialField;
 
         private Texture _lastTexture_always;
         private int _lastWidth_always;
@@ -47,11 +46,10 @@ namespace HRYooba.AVPro
             if (Application.isPlaying) return;
 
             if (_updateInternalMaterialMethod == null) _updateInternalMaterialMethod = typeof(DisplayUGUI).GetMethod("UpdateInternalMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (_isUserMaterialField == null) _isUserMaterialField = typeof(DisplayUGUI).GetField("_isUserMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
 
             var _mediaPlayer = CurrentMediaPlayer;
             var _setNativeSize = ApplyNativeSize;
-            var _isUserMaterial = (bool)_isUserMaterialField.GetValue(this);
+            var _isUserMaterial = (this.m_Material != null);
 
             if (_setNativeSize)
             {
