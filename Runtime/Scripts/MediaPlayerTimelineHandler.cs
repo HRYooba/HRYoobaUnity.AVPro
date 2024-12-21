@@ -16,7 +16,7 @@ namespace HRYooba.AVPro
 
         private FieldInfo _isMediaOpenedField;
 
-        private void Awake()
+        private void Start()
         {
             _mediaPlayer = GetComponent<MediaPlayer>();
 
@@ -47,7 +47,6 @@ namespace HRYooba.AVPro
             {
                 if (_mediaPlayer.MediaOpened)
                 {
-
                     _mediaPlayer.Control.Seek(_time);
 
 #if UNITY_EDITOR
@@ -85,7 +84,34 @@ namespace HRYooba.AVPro
 
         public void GatherProperties(PlayableDirector director, IPropertyCollector driver)
         {
-            // driver.AddFromName<MediaPlayerTimelineHandler>(gameObject, "_time");
         }
     }
+
+#if UNITY_EDITOR
+    [UnityEditor.CustomEditor(typeof(MediaPlayerTimelineHandler))]
+    public class MediaPlayerTimelineHandlerEditor : UnityEditor.Editor
+    {
+        private MediaPlayerTimelineHandler _target;
+        private MediaPlayer _mediaPlayer;
+
+        private void OnEnable()
+        {
+            _target = target as MediaPlayerTimelineHandler;
+            _mediaPlayer = _target.GetComponent<MediaPlayer>();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+
+            if (_mediaPlayer == null) return;
+            if (_mediaPlayer.Info == null) return;
+
+            var duration = _mediaPlayer.Info.GetDuration();
+            var durationFrames = _mediaPlayer.Info.GetDurationFrames();
+
+            UnityEditor.EditorGUILayout.LabelField("Duration", $"{duration} sec ({durationFrames} frames)");
+        }
+    }
+#endif
 }
