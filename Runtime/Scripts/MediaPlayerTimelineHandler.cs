@@ -61,6 +61,7 @@ namespace HRYooba.AVPro
         {
             _isControlling = true;
 
+            if (!gameObject.activeSelf) return;
             if (!_mediaPlayer.MediaOpened)
             {
                 _mediaPlayer.OpenMedia(_mediaPlayer.AutoStart);
