@@ -9,7 +9,8 @@ namespace HRYooba.AVPro
     [Serializable]
     public class MediaPlayerPlayableClip : PlayableAsset, ITimelineClipAsset
     {
-        [SerializeField] private bool _isAutoRewind = true;
+        [SerializeField] private bool _autoRewind = true;
+        [SerializeField] private bool _destroyClose = true;
 
         public MediaPlayer MediaPlayer { get; set; }
         public PlayableDirector Director { get; set; }
@@ -22,7 +23,8 @@ namespace HRYooba.AVPro
             var playable = ScriptPlayable<MediaPlayerPlayableBehaviour>.Create(graph);
             var behaviour = playable.GetBehaviour();
 
-            behaviour.IsAutoRewind = _isAutoRewind;
+            behaviour.AutoRewind = _autoRewind;
+            behaviour.DestroyClose = _destroyClose;
             behaviour.MediaPlayer = MediaPlayer;
             behaviour.Director = Director;
 

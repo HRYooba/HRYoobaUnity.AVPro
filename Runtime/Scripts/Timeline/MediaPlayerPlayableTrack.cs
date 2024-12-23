@@ -23,9 +23,12 @@ namespace HRYooba.AVPro
             mediaPlayerClip.Director = director;
             mediaPlayerClip.Clip = clip;
 
-            if (mediaPlayer != null)
+            if (!Application.isPlaying)
             {
-                mediaPlayer.OpenMedia(mediaPlayer.AutoStart);
+                if (!mediaPlayer.MediaOpened || mediaPlayer.Info == null)
+                {
+                    mediaPlayer.OpenMedia(mediaPlayer.AutoStart);
+                }
 
                 if (mediaPlayer.Info != null)
                 {
