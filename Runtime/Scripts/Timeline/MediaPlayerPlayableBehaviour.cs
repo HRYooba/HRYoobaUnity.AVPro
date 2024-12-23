@@ -24,15 +24,15 @@ namespace HRYooba.AVPro
             }
         }
 
-        // public override void OnPlayableDestroy(Playable playable)
-        // {
-        //     if (MediaPlayer == null || Director == null) return;
+        public override void OnPlayableDestroy(Playable playable)
+        {
+            if (MediaPlayer == null || Director == null) return;
 
-        //     if (DestroyClose)
-        //     {
-        //         MediaPlayer.CloseMedia();
-        //     }
-        // }
+            if (DestroyClose)
+            {
+                MediaPlayer.CloseMedia();
+            }
+        }
 
         // public override void OnGraphStart(Playable playable)
         // {

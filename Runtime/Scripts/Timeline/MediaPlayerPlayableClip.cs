@@ -10,7 +10,7 @@ namespace HRYooba.AVPro
     public class MediaPlayerPlayableClip : PlayableAsset, ITimelineClipAsset
     {
         [SerializeField] private bool _autoRewind = true;
-        [SerializeField] private bool _destroyClose = true;
+        [SerializeField] private bool _destroyClose = false;
 
         public MediaPlayer MediaPlayer { get; set; }
         public PlayableDirector Director { get; set; }
