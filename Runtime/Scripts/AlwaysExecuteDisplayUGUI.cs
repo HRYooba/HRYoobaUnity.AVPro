@@ -49,7 +49,7 @@ namespace HRYooba.AVPro
 
             var _mediaPlayer = CurrentMediaPlayer;
             var _setNativeSize = ApplyNativeSize;
-            var _isUserMaterial = (this.m_Material != null);
+            var _isUserMaterial = (this.material != null);
 
             if (_setNativeSize)
             {

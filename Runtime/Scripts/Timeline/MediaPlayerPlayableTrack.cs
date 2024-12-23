@@ -25,15 +25,18 @@ namespace HRYooba.AVPro
 
             if (!Application.isPlaying)
             {
-                if (!mediaPlayer.MediaOpened || mediaPlayer.Info == null)
+                if (mediaPlayer.gameObject.activeSelf)
                 {
-                    mediaPlayer.OpenMedia(mediaPlayer.AutoStart);
-                }
+                    if (!mediaPlayer.MediaOpened || mediaPlayer.Info == null)
+                    {
+                        mediaPlayer.OpenMedia(mediaPlayer.AutoStart);
+                    }
 
-                if (mediaPlayer.Info != null)
-                {
-                    // clipの長さをMediaPlayerの長さに合わせる
-                    clip.duration = mediaPlayer.Info.GetDuration();
+                    if (mediaPlayer.Info != null)
+                    {
+                        // clipの長さをMediaPlayerの長さに合わせる
+                        clip.duration = mediaPlayer.Info.GetDuration();
+                    }
                 }
             }
 
