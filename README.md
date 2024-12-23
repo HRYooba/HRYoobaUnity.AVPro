@@ -13,12 +13,9 @@ ProjectSetting/PackageManagerから以下のScopeRegistriesを設定
 PackageManagerからMyRegistriesを選択しパッケージを入れる。
 
 ## 2 Timeline Support
-<img src="https://github.com/user-attachments/assets/71c12e1c-cb65-4966-bf4c-d2a1e58f9266">  
+<img src="https://github.com/user-attachments/assets/d680f978-7af3-4b58-99a2-793612b8e5cf">  
 
 ### 2.1 AlwaysExecuteDisplayUGUIを生成
 <img src="https://github.com/user-attachments/assets/89bddac3-affe-4d5e-b29e-b4f7bcc8990d">  
-
-### 2.2 MediaPlayerTimelineHandler
-MediaPlayerにMediaPlayerTimelineHandlerをAddComponentから追加
 
 
