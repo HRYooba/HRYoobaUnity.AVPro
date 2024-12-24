@@ -15,13 +15,7 @@ namespace HRYooba.AVPro
     public class AlwaysExecuteDisplayUGUI : DisplayUGUI
     {
 #if UNITY_EDITOR
-        private MethodInfo _updateInternalMaterialMethod;
         private MethodInfo _getDrawingDimensionsMethod;
-
-        private Texture _lastTexture_always;
-        private int _lastWidth_always;
-        private int _lastHeight_always;
-        private Orientation _lastOrientation_always;
         private bool _flipY_always;
         private List<UIVertex> _vertices_always = new List<UIVertex>(4);
         private static List<int> QuadIndices_always = new List<int>(new int[] { 0, 1, 2, 2, 3, 0 });
@@ -39,60 +33,6 @@ namespace HRYooba.AVPro
         protected override void OnDestroy()
         {
             base.OnDestroy();
-        }
-
-        private void LateUpdate()
-        {
-            if (Application.isPlaying) return;
-
-            if (_updateInternalMaterialMethod == null) _updateInternalMaterialMethod = typeof(DisplayUGUI).GetMethod("UpdateInternalMaterial", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            var _mediaPlayer = CurrentMediaPlayer;
-            var _setNativeSize = ApplyNativeSize;
-            var _isUserMaterial = (this.material != null);
-
-            if (_setNativeSize)
-            {
-                SetNativeSize();
-            }
-
-            if (_lastTexture_always != mainTexture)
-            {
-                _lastTexture_always = mainTexture;
-                SetVerticesDirty();
-                SetMaterialDirty();
-            }
-
-            if (HasValidTexture_always())
-            {
-                if (mainTexture != null)
-                {
-                    Orientation orientation = Helper.GetOrientation(_mediaPlayer.Info.GetTextureTransform());
-                    if (mainTexture.width != _lastWidth_always || mainTexture.height != _lastHeight_always || orientation != _lastOrientation_always)
-                    {
-                        _lastWidth_always = mainTexture.width;
-                        _lastHeight_always = mainTexture.height;
-                        _lastOrientation_always = orientation;
-                        SetVerticesDirty();
-                        SetMaterialDirty();
-                    }
-                }
-            }
-
-            // if (Application.isPlaying)
-            // {
-            if (!_isUserMaterial)
-            {
-                // UpdateInternalMaterial();
-                _updateInternalMaterialMethod?.Invoke(this, null);
-            }
-            // }
-
-            if (material != null && _mediaPlayer != null)
-            {
-                // TODO: only run when dirty
-                VideoRender.SetupMaterialForMedia(materialForRendering, _mediaPlayer);
-            }
         }
 
         public override Texture mainTexture
