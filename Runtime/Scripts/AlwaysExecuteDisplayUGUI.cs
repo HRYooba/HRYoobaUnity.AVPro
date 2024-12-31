@@ -22,16 +22,22 @@ namespace HRYooba.AVPro
 
         protected override void Awake()
         {
+            if (!Application.isPlaying) return;
+
             base.Awake();
         }
 
         protected override void Start()
         {
+            if (!Application.isPlaying) return;
+
             base.Start();
         }
 
         protected override void OnDestroy()
         {
+            if (!Application.isPlaying) return;
+            
             base.OnDestroy();
         }
 

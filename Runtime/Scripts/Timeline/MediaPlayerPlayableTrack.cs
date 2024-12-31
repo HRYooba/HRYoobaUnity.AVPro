@@ -35,7 +35,11 @@ namespace HRYooba.AVPro
                     if (mediaPlayer.Info != null)
                     {
                         // clipの長さをMediaPlayerの長さに合わせる
-                        clip.duration = mediaPlayer.Info.GetDuration();
+                        var duration = mediaPlayer.Info.GetDuration();
+                        if (duration > 0)
+                        {
+                            clip.duration = duration;
+                        }
                     }
                 }
             }
