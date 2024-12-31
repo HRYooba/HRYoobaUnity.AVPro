@@ -65,7 +65,7 @@ namespace HRYooba.AVPro
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
             if (MediaPlayer == null || Director == null) return;
-            if (!MediaPlayer.gameObject.activeSelf) return;
+            if (!MediaPlayer.gameObject.activeInHierarchy) return;
 
             if (MediaPlayer.Control == null)
             {

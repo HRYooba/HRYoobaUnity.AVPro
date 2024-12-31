@@ -25,7 +25,7 @@ namespace HRYooba.AVPro
 
             if (!Application.isPlaying)
             {
-                if (mediaPlayer.gameObject.activeSelf)
+                if (mediaPlayer.gameObject.activeInHierarchy)
                 {
                     if (!mediaPlayer.MediaOpened || mediaPlayer.Info == null)
                     {
