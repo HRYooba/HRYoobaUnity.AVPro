@@ -99,6 +99,7 @@ namespace HRYooba.AVPro
         /// <returns></returns>
         public static async UniTask PlayAsync(this MediaPlayer mediaPlayer, CancellationToken cancellationToken)
         {
+            mediaPlayer.Play();
             await mediaPlayer.EventsAsObservable().Where(_ => _.EventType == MediaPlayerEvent.EventType.FinishedPlaying).FirstAsync(cancellationToken);
         }
 
