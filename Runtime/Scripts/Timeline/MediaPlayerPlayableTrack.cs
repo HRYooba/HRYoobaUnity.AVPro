@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Timeline;
 using UnityEngine.Playables;
@@ -12,39 +13,18 @@ namespace HRYooba.AVPro
     [TrackClipType(typeof(MediaPlayerPlayableClip))]
     public class MediaPlayerPlayableTrack : TrackAsset
     {
-        protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
+        [SerializeField]
+        [Tooltip("シーク後、新しいコマが届くまで待ってから描画へ進む。映像と他のトラックが同じゲームフレームで切り替わる。\n" +
+                 "全コマがキーフレームの映像（HAP・ProRes など）向け。H.264 などは 1 コマのシークに時間がかかり、その間フレームが止まる")]
+        private bool _waitForFrame = true;
+
+        public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
         {
-            var director = gameObject.GetComponent<PlayableDirector>();
-
-            var mediaPlayerClip = clip.asset as MediaPlayerPlayableClip;
-            var mediaPlayer = director.GetGenericBinding(this) as MediaPlayer;
-
-            mediaPlayerClip.MediaPlayer = mediaPlayer;
-            mediaPlayerClip.Director = director;
-            mediaPlayerClip.Clip = clip;
-
-            if (!Application.isPlaying)
-            {
-                if (mediaPlayer.gameObject.activeInHierarchy)
-                {
-                    if (!mediaPlayer.MediaOpened || mediaPlayer.Info == null)
-                    {
-                        mediaPlayer.OpenMedia(mediaPlayer.AutoStart);
-                    }
-
-                    if (mediaPlayer.Info != null)
-                    {
-                        // clipの長さをMediaPlayerの長さに合わせる
-                        var duration = mediaPlayer.Info.GetDuration();
-                        if (duration > 0)
-                        {
-                            clip.duration = duration;
-                        }
-                    }
-                }
-            }
-
-            return base.CreatePlayable(graph, gameObject, clip);
+            var mixer = ScriptPlayable<MediaPlayerPlayableMixerBehaviour>.Create(graph, inputCount);
+            var behaviour = mixer.GetBehaviour();
+            behaviour.WaitForFrame = _waitForFrame;
+            behaviour.CloseOnDestroy = GetClips().Any(c => c.asset is MediaPlayerPlayableClip clip && clip.DestroyClose);
+            return mixer;
         }
     }
 }
