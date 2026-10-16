@@ -112,9 +112,13 @@ namespace HRYooba.AVPro
         }
 
         /// <summary>
-        /// <paramref name="targetFrame"/> 以前で最も新しいコマを出力する。貯めた中に無ければ出力を変えない
+        /// <paramref name="targetFrame"/> 以前で最も新しいコマを出力する。<paramref name="maxGap"/> コマより古いものしか無ければ出力を変えず、届くのを待つ
         /// </summary>
-        public void Present(long targetFrame)
+        /// <remarks>
+        /// ゲームのフレーム時間が映像の 1 コマより長いと届かないコマがあるので、少し前のコマは代わりに出す。
+        /// 時刻が飛んだ直後に貯まっている遠いコマは、直前に出していたコマと同じく誤りなので出さない。
+        /// </remarks>
+        public void Present(long targetFrame, int maxGap)
         {
             if (_disposed) return;
 
@@ -122,7 +126,7 @@ namespace HRYooba.AVPro
             for (var i = 0; i < _slots.Length; i++)
             {
                 var frame = _slotFrames[i];
-                if (frame < 0 || frame > targetFrame) continue;
+                if (frame < 0 || frame > targetFrame || targetFrame - frame > maxGap) continue;
                 if (found < 0 || frame > _slotFrames[found]) found = i;
             }
             if (found < 0) return;

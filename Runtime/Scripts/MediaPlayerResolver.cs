@@ -84,8 +84,9 @@ namespace HRYooba.AVPro
             var producer = mediaPlayer.TextureProducer;
             if (producer == null || producer.GetTexture() == null) return null;
 
-            var frameCount = producer.GetTextureFrameCount();
-            if (_texture == null || mediaPlayer != _resolvedPlayer || frameCount != _resolvedFrameCount)
+            // フレームカウントを持たない環境（WebGL の一部）ではコマの変化が分からないので毎回変換する
+            var frameCount = producer.SupportsTextureFrameCount() ? producer.GetTextureFrameCount() : -1;
+            if (_texture == null || mediaPlayer != _resolvedPlayer || frameCount < 0 || frameCount != _resolvedFrameCount)
             {
                 _texture = _resolver.Resolve(mediaPlayer, _texture);
                 _resolvedPlayer = mediaPlayer;

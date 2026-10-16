@@ -112,7 +112,7 @@ namespace HRYooba.AVPro
             }
 
             _buffer.Capture(frameRate);
-            _buffer.Present(targetFrame);
+            _buffer.Present(targetFrame, ResyncFrames);
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
@@ -155,47 +155,59 @@ namespace HRYooba.AVPro
             var control = mediaPlayer.Control;
             var maxFrame = mediaPlayer.Info.GetMaxFrameNumber();
 
-            if (!control.IsPlaying())
+            // 映像側のループは Timeline の時刻と食い違うので使わない。周回は Timeline で表す
+            if (control.IsLooping()) control.SetLooping(false);
+
+            if (control.IsPlaying())
             {
-                // 先行分が末尾に届く区間では再生を始めても即座に終わるので、止めたままシークで合わせる
-                if (targetFrame + LeadFrames >= maxFrame)
-                {
-                    FetchFrame(mediaPlayer, targetFrame, frameRate);
-                    return;
-                }
-                StartAhead(mediaPlayer, targetFrame, frameRate);
+                // Timeline はスケール済みのゲーム時間、映像は実時間で進むので、ずれは溜まる前提で先行し直す
+                var desiredTime = time + LeadFrames / (double)frameRate;
+                var threshold = Math.Max(ResyncFrames / (double)frameRate, 2.0 * deltaTime);
+                if (Math.Abs(control.GetCurrentTime() - desiredTime) <= threshold) return;
+                control.Pause();
+            }
+
+            // 先行分が末尾に届く区間では再生を始めても即座に終わるので、止めたままシークで合わせる
+            if (targetFrame + LeadFrames >= maxFrame)
+            {
+                FetchFrame(mediaPlayer, targetFrame, frameRate);
                 return;
             }
 
-            // Timeline はスケール済みのゲーム時間、映像は実時間で進むので、ずれは溜まる前提で先行し直す
-            var desiredTime = time + LeadFrames / (double)frameRate;
-            var threshold = Math.Max(ResyncFrames / (double)frameRate, 2.0 * deltaTime);
-            var leadEnd = targetFrame + LeadFrames >= maxFrame;
-            if (!leadEnd && Math.Abs(control.GetCurrentTime() - desiredTime) > threshold)
+            if (Prime(mediaPlayer, targetFrame, frameRate))
             {
-                StartAhead(mediaPlayer, targetFrame, frameRate);
+                control.Play();
+                _requestedFrame = -1;
             }
         }
 
         /// <summary>
-        /// 今のコマから先行分までを貯めてから再生を始める。始めた直後から Timeline の時刻のコマを出せるようにする
+        /// 今のコマから先行分までを貯め、映像を先行分の位置に置く。揃ったら true。
+        /// 揃うまでは止めたまま、ゲームフレームをまたいで続きを行う。始めた直後から Timeline の時刻のコマを出せるようにする
         /// </summary>
-        private void StartAhead(MediaPlayer mediaPlayer, int targetFrame, float frameRate)
+        private bool Prime(MediaPlayer mediaPlayer, int targetFrame, float frameRate)
         {
-            var control = mediaPlayer.Control;
-            if (control.IsPlaying()) control.Pause();
-
-            // 映像側のループは Timeline の時刻と食い違うので使わない。周回は Timeline で表す
-            if (control.IsLooping()) control.SetLooping(false);
-
-            var maxFrame = mediaPlayer.Info.GetMaxFrameNumber();
-            for (var frame = targetFrame; frame <= Mathf.Min(targetFrame + LeadFrames, maxFrame); frame++)
+            var lastFrame = targetFrame + LeadFrames;
+            for (var frame = targetFrame; frame <= lastFrame; frame++)
             {
                 FetchFrame(mediaPlayer, frame, frameRate);
+                if (!_buffer.Contains(frame)) return false;
             }
 
-            control.Play();
-            _requestedFrame = -1;
+            // 貯めてあったコマはシークを省くので、映像の位置は別に合わせる
+            if (ProducerFrame(mediaPlayer, frameRate) == lastFrame) return true;
+            if (_requestedFrame != lastFrame)
+            {
+                _requestedFrame = lastFrame;
+                SeekAndWait(mediaPlayer, lastFrame);
+            }
+            return ProducerFrame(mediaPlayer, frameRate) == lastFrame;
+        }
+
+        private static long ProducerFrame(MediaPlayer mediaPlayer, float frameRate)
+        {
+            var timeStamp = mediaPlayer.TextureProducer.GetTextureTimeStamp();
+            return timeStamp == long.MinValue ? -1 : MediaPlayerFrameBuffer.ToFrame(timeStamp, frameRate);
         }
 
         /// <summary>
