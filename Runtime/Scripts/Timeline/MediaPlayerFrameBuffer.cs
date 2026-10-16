@@ -140,7 +140,10 @@ namespace HRYooba.AVPro
                     MediaPlayerResolver.ReleaseTexture(_output);
                     _output = RenderTexture.GetTemporary(source.descriptor);
                 }
+                // Blit は出力先をアクティブな描画先に残すので、後続の描画へ持ち越さないよう戻す
+                var previous = RenderTexture.active;
                 Graphics.Blit(source, _output);
+                RenderTexture.active = previous;
                 PresentedFrame = _slotFrames[found];
             }
             IsPresenting = true;
