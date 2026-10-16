@@ -14,6 +14,19 @@ namespace HRYooba.AVPro
     [RequireComponent(typeof(CanvasRenderer))]
     public class AlwaysExecuteDisplayUGUI : DisplayUGUI
     {
+        public override Texture mainTexture
+        {
+            get
+            {
+                // MediaPlayerPlayableTrack が Timeline の時刻に合わせたコマを出しているときはそれを優先する
+                if (MediaPlayerFrameBuffer.TryGetPresentedTexture(CurrentMediaPlayer, out var presented)) return presented;
+#if UNITY_EDITOR
+                if (!Application.isPlaying) return EditModeMainTexture;
+#endif
+                return base.mainTexture;
+            }
+        }
+
 #if UNITY_EDITOR
         private MethodInfo _getDrawingDimensionsMethod;
         private bool _flipY_always;
@@ -41,15 +54,10 @@ namespace HRYooba.AVPro
             base.OnDestroy();
         }
 
-        public override Texture mainTexture
+        private Texture EditModeMainTexture
         {
             get
             {
-                if (Application.isPlaying)
-                {
-                    return base.mainTexture;
-                }
-
                 var _mediaPlayer = CurrentMediaPlayer;
                 var _defaultTexture = DefaultTexture;
                 var _noDefaultDisplay = NoDefaultDisplay;

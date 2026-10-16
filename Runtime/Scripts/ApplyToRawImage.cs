@@ -40,10 +40,14 @@ namespace HRYooba.AVPro
             if (_mediaPlayer == null) return;
             if (_image == null) return;
 
-            var textureSource = _mediaPlayer.TextureProducer;
-            if (textureSource != null && textureSource.GetTexture() != null)
+            // MediaPlayerPlayableTrack が Timeline の時刻に合わせたコマを出しているときはそれを優先する
+            if (!MediaPlayerFrameBuffer.TryGetPresentedTexture(_mediaPlayer, out var texture))
             {
-                var texture = textureSource.GetTexture();
+                texture = _mediaPlayer.TextureProducer?.GetTexture();
+            }
+
+            if (texture != null)
+            {
 
                 if (_material == null)
                 {

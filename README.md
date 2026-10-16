@@ -19,11 +19,18 @@ PackageManagerからMyRegistriesを選択しパッケージを入れる。
 <img src="https://github.com/user-attachments/assets/89bddac3-affe-4d5e-b29e-b4f7bcc8990d">  
 
 ### 2.2 MediaPlayerPlayableTrack の挙動
-- クリップのローカル時刻（Clip In・Speed を含む）から映像のコマ番号を求め、コマが変わったときだけシークする
-- MediaPlayer の再生は止める。時刻は Timeline が決める（MediaPlayer の AutoStart は不要）
-- `Wait For Frame`（トラックの設定、既定 ON）: シーク後に新しいコマが届くまで待ってから描画へ進む。映像と ActivationTrack などが同じゲームフレームで切り替わる
-  - 待つ間メインスレッドが止まる。全コマがキーフレームの映像（HAP・ProRes など）向け。H.264 などでは OFF にする（OFF だと映像は 1 ゲームフレーム遅れて出る）
-  - AVPro が WaitForNextFrame に対応しないプラットフォームではこの待ちが効かず、OFF と同じになる
+時刻の主は Timeline。MediaPlayer はそれに従う（MediaPlayer の AutoStart は不要）。
+
+- `Sync Mode`（トラックの設定）
+  - `Buffered`（既定）: 映像を `Lead Frames` コマ先行して再生し、届いたコマを `Buffer Size` 枚貯めて、Timeline の時刻のコマを出す。音が鳴る
+    - 音は `Lead Frames` の分だけ絵より先に出る
+    - ゲームのフレーム時間が映像の 1 コマより長いと、届かなかったコマの代わりに 1 つ前のコマが出る
+    - 映像が Timeline から 2 コマ（またはゲーム 2 フレーム）以上ずれたらシークで戻す。`Time.timeScale` が 1 以外だと、ずれ続けてシークを繰り返す
+    - Timeline に合わせたコマは `AlwaysExecuteDisplayUGUI` と `ApplyToRawImage` だけが表示する。AVPro の `ApplyToMaterial` などは MediaPlayer のテクスチャをそのまま出すので揃わない
+    - YCbCr など複数テクスチャの映像では使えず、`Seek` と同じ動きになる
+  - `Seek`: 毎コマ Timeline の時刻へシークする。音は鳴らない
+- 一時停止中の `PlayableDirector.Evaluate()`・Edit mode のスクラブは、どちらのモードでもシークで合わせる
+- `Wait For Frame`（トラックの設定、既定 ON）: シークの後、新しいコマが届くまで待ってから描画へ進む。待つ間メインスレッドが止まる。H.264 などは 1 コマのシークに時間がかかる
 - `Auto Rewind`（クリップの設定）: クリップ区間を抜けたとき・区間内で PlayableDirector が止まったときに先頭へ戻す。`PlayableDirector.Pause()` では戻さない
 - `Destroy Close`（クリップの設定）: Play mode でグラフが破棄されたとき CloseMedia する
 - クリップを作ると長さが映像の長さになる（Timeline ウィンドウで MediaPlayer が開いているとき）。後から合わせるときはクリップの Inspector の `Set Duration`

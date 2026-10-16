@@ -6,14 +6,28 @@ using RenderHeads.Media.AVProVideo;
 namespace HRYooba.AVPro
 {
     /// <summary>
-    /// MediaPlayerPlayableTrack の唯一の制御点。区間内のクリップの時刻へ MediaPlayer をコマ単位でシークする
+    /// MediaPlayerPlayableTrack の唯一の制御点。時刻の主は Timeline で、MediaPlayer をそれに従わせる
     /// </summary>
+    /// <remarks>
+    /// 再生中（Buffered）: 映像を Timeline より先行して再生させ、<see cref="MediaPlayerFrameBuffer"/> から Timeline の時刻のコマを出す。音も鳴る。
+    /// 停止中・スクラブ・Edit mode・Seek モード: 映像を止め、Timeline の時刻のコマへシークする。
+    /// </remarks>
     public class MediaPlayerPlayableMixerBehaviour : PlayableBehaviour
     {
         // Timeline のフレーム境界の時刻は浮動小数で僅かに手前へずれるため、切り捨て前に足す
         private const double FrameEpsilon = 1e-6;
+        // 先行量からこのコマ数より外れたらシークで戻す。ゲームフレームの刻みによる揺れより大きく取る
+        private const int ResyncFrames = 2;
 
         private static Camera _dummyCamera;
+
+        public MediaPlayerTimelineSyncMode SyncMode { get; set; }
+
+        /// <summary>Buffered で映像を Timeline より先行させるコマ数。音はこの分だけ絵より先に出る</summary>
+        public int LeadFrames { get; set; }
+
+        /// <summary>Buffered で貯めるコマ数</summary>
+        public int BufferSize { get; set; }
 
         /// <summary>シーク後、新しいコマがテクスチャに届くまでメインスレッドを止めるか</summary>
         public bool WaitForFrame { get; set; }
@@ -22,9 +36,11 @@ namespace HRYooba.AVPro
         public bool CloseOnDestroy { get; set; }
 
         private MediaPlayer _mediaPlayer;
+        private MediaPlayerFrameBuffer _buffer;
         private int _activeInput = -1;
         private bool _activeAutoRewind;
         private bool _openRequested;
+        private bool _buffered;
         private int _seekedFrame = -1;
         private double _seekedTime = -1.0;
 
@@ -45,6 +61,8 @@ namespace HRYooba.AVPro
             {
                 _activeInput = input;
                 _activeAutoRewind = ((ScriptPlayable<MediaPlayerPlayableBehaviour>)playable.GetInput(input)).GetBehaviour().AutoRewind;
+                ResetSeekState();
+                _buffer?.Clear();
             }
 
             if (!mediaPlayer.gameObject.activeInHierarchy)
@@ -56,21 +74,50 @@ namespace HRYooba.AVPro
 
             if (!EnsureOpened(mediaPlayer)) return;
 
-            // 時刻の主導権は Timeline にある。MediaPlayer 自身の再生と競合させない
-            if (mediaPlayer.Control.IsPlaying()) mediaPlayer.Control.Pause();
+            var control = mediaPlayer.Control;
+            var frameRate = mediaPlayer.Info.GetVideoFrameRate();
+            var time = playable.GetInput(input).GetTime();
 
-            SeekTo(mediaPlayer, playable.GetInput(input).GetTime());
+            var buffered = CanBuffer(playable, info, mediaPlayer, frameRate);
+            if (buffered != _buffered)
+            {
+                _buffered = buffered;
+                ResetSeekState();
+                _buffer?.Clear();
+            }
+
+            if (buffered)
+            {
+                PlayBuffered(mediaPlayer, time, frameRate, info.deltaTime);
+            }
+            else
+            {
+                if (control.IsPlaying()) control.Pause();
+                if (_buffer != null) _buffer.IsPresenting = false;
+                SeekTo(mediaPlayer, time, frameRate);
+            }
 
 #if UNITY_EDITOR
             if (!Application.isPlaying) mediaPlayer.EditorUpdate();
 #endif
         }
 
+        public override void OnBehaviourPause(Playable playable, FrameData info)
+        {
+            // PlayableDirector.Pause() では ProcessFrame が来ないので、ここで音と映像を止める。
+            // 表示は出力テクスチャに残った Timeline の時刻のコマのまま
+            PauseMedia();
+        }
+
         public override void OnPlayableDestroy(Playable playable)
         {
+            if (_mediaPlayer == null) return;
+
+            MediaPlayerFrameBuffer.Release(_mediaPlayer);
+            _buffer = null;
+
             // Edit mode では Timeline ウィンドウが編集のたびにグラフを作り直すため、破棄に副作用を持たせない
             if (!Application.isPlaying) return;
-            if (_mediaPlayer == null) return;
 
             if (CloseOnDestroy)
             {
@@ -81,6 +128,62 @@ namespace HRYooba.AVPro
                 // クリップ区間内でグラフが破棄される（PlayableDirector.Stop・終端到達）のはクリップを抜けたのと同じ扱い
                 _mediaPlayer.Rewind(true);
             }
+            else
+            {
+                PauseMedia();
+            }
+        }
+
+        private bool CanBuffer(Playable playable, FrameData info, MediaPlayer mediaPlayer, float frameRate)
+        {
+            if (SyncMode != MediaPlayerTimelineSyncMode.Buffered) return false;
+            if (!Application.isPlaying) return false;
+            if (info.evaluationType != FrameData.EvaluationType.Playback) return false;
+            if (!playable.GetGraph().IsPlaying()) return false;
+            if (frameRate <= 0f) return false;
+
+            // 出力テクスチャは 1 枚だけを貯める。YCbCr など複数枚の映像はシークで合わせる
+            var producer = mediaPlayer.TextureProducer;
+            return producer != null && producer.GetTextureCount() == 1;
+        }
+
+        private void PlayBuffered(MediaPlayer mediaPlayer, double time, float frameRate, float deltaTime)
+        {
+            var control = mediaPlayer.Control;
+            if (!control.CanPlay()) return;
+
+            _buffer ??= MediaPlayerFrameBuffer.Acquire(mediaPlayer, Mathf.Max(BufferSize, LeadFrames + 2));
+
+            var desiredFrame = ToFrame(time, frameRate) + LeadFrames;
+            if (!control.IsPlaying())
+            {
+                if (!control.IsFinished() || desiredFrame < mediaPlayer.Info.GetMaxFrameNumber())
+                {
+                    control.SeekToFrame(desiredFrame);
+                    control.Play();
+                    _buffer.Clear();
+                }
+            }
+            else
+            {
+                // Timeline はスケール済みのゲーム時間、映像は実時間で進むので、ずれは溜まる前提でシークで戻す
+                var desiredTime = time + LeadFrames / (double)frameRate;
+                var threshold = Math.Max(ResyncFrames / (double)frameRate, 2.0 * deltaTime);
+                if (Math.Abs(control.GetCurrentTime() - desiredTime) > threshold)
+                {
+                    control.SeekToFrame(desiredFrame);
+                    _buffer.Clear();
+                }
+            }
+
+            _buffer.Capture();
+            _buffer.Present(time, frameRate);
+        }
+
+        private void PauseMedia()
+        {
+            if (_mediaPlayer == null || _mediaPlayer.Control == null) return;
+            if (_mediaPlayer.Control.IsPlaying()) _mediaPlayer.Control.Pause();
         }
 
         private static int FindActiveInput(Playable playable)
@@ -105,6 +208,12 @@ namespace HRYooba.AVPro
             if (_activeAutoRewind && mediaPlayer.Control != null)
             {
                 mediaPlayer.Rewind(true);
+                // 先頭へ戻したコマを見せる
+                if (_buffer != null) _buffer.IsPresenting = false;
+            }
+            else
+            {
+                PauseMedia();
             }
             _activeInput = -1;
             ResetSeekState();
@@ -130,10 +239,9 @@ namespace HRYooba.AVPro
             return false;
         }
 
-        private void SeekTo(MediaPlayer mediaPlayer, double time)
+        private void SeekTo(MediaPlayer mediaPlayer, double time, float frameRate)
         {
             var control = mediaPlayer.Control;
-            var frameRate = mediaPlayer.Info.GetVideoFrameRate();
 
             if (frameRate <= 0f)
             {
@@ -144,8 +252,7 @@ namespace HRYooba.AVPro
                 return;
             }
 
-            var frame = (int)Math.Floor(Math.Max(0.0, time) * frameRate + FrameEpsilon);
-            frame = Mathf.Min(frame, mediaPlayer.Info.GetMaxFrameNumber());
+            var frame = Mathf.Min(ToFrame(time, frameRate), mediaPlayer.Info.GetMaxFrameNumber());
             if (frame == _seekedFrame) return;
 
             // デコーダの準備前は新しいコマが届かず待ちが空回りするので、準備できるまで毎フレーム試す
@@ -163,6 +270,11 @@ namespace HRYooba.AVPro
             {
                 control.WaitForNextFrame(DummyCamera, previousFrameCount);
             }
+        }
+
+        private static int ToFrame(double time, float frameRate)
+        {
+            return (int)Math.Floor(Math.Max(0.0, time) * frameRate + FrameEpsilon);
         }
 
         private void ResetSeekState()
