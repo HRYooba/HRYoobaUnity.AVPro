@@ -26,7 +26,7 @@ PackageManagerからMyRegistriesを選択しパッケージを入れる。
     - 音は `Lead Frames` の分だけ絵より先に出る
     - ゲームのフレーム時間が映像の 1 コマより長いと、届かなかったコマの代わりに 1 つ前のコマが出る
     - 映像が Timeline から 2 コマ（またはゲーム 2 フレーム）以上ずれたらシークで戻す。`Time.timeScale` が 1 以外だと、ずれ続けてシークを繰り返す
-    - Timeline に合わせたコマは `AlwaysExecuteDisplayUGUI` と `ApplyToRawImage` だけが表示する。AVPro の `ApplyToMaterial` などは MediaPlayer のテクスチャをそのまま出すので揃わない
+    - Timeline に合わせたコマは `AlwaysExecuteDisplayUGUI` だけが表示する。AVPro の `ApplyToMaterial` などは MediaPlayer のテクスチャをそのまま出すので揃わない
     - YCbCr など複数テクスチャの映像では使えず、`Seek` と同じ動きになる
   - `Seek`: 毎コマ Timeline の時刻へシークする。音は鳴らない
 - 一時停止中の `PlayableDirector.Evaluate()`・Edit mode のスクラブは、どちらのモードでもシークで合わせる
