@@ -370,6 +370,8 @@ namespace HRYooba.AVPro
                     _dummyCamera.cullingMask = 0;
                     _dummyCamera.clearFlags = CameraClearFlags.Nothing;
                     _dummyCamera.enabled = false;
+                    // 描画先が無いと SRP は画面向けの最終 Blit と UI の重ね描きまで行い、サイズ不一致の RenderPass エラーになる
+                    _dummyCamera.targetTexture = new RenderTexture(1, 1, 0) { name = "HRYooba.AVPro Frame Sync Target", hideFlags = HideFlags.HideAndDontSave };
                 }
                 return _dummyCamera;
             }
