@@ -18,10 +18,10 @@ PackageManagerからMyRegistriesを選択しパッケージを入れる。
 ### 2.1 映像の表示
 Timeline の時刻に合わせたコマは、次の部品で表示する。どちらも Edit mode でも表示する。
 
-- uGUI: RawImage に `MediaPlayerRawImage` を付け、MediaPlayer を割り当てる
+- uGUI: RawImage に `MediaPlayerRawImage` を付け、MediaPlayer を割り当てる。縦横比を合わせるときは同じ GameObject に AspectRatioFitter を付ける（映像の縦横比が入る）
 - UI Toolkit: `MediaPlayerUIToolkitImage` に UIDocument・要素の name・MediaPlayer を割り当てる。要素が `Image` なら image に、それ以外なら背景画像に出す
 
-上下反転・ガンマ・YCbCr は AVPro の resolve で処理済みのテクスチャを渡す。AVPro の `DisplayUGUI`・`ApplyToMaterial` などは MediaPlayer のテクスチャをそのまま出すので、Timeline とは揃わない。
+上下反転・ガンマ・YCbCr は AVPro の resolve で処理済みのテクスチャを渡す。ピクセルの縦横比（非正方ピクセル）は反映しない。AVPro の `DisplayUGUI`・`ApplyToMaterial` などは MediaPlayer のテクスチャをそのまま出すので、Timeline とは揃わない。
 
 ### 2.2 MediaPlayerPlayableTrack の挙動
 時刻の主は Timeline。MediaPlayer はそれに従う（MediaPlayer の AutoStart・Loop は不要）。
