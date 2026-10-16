@@ -121,7 +121,11 @@ namespace HRYooba.AVPro
             {
                 _openRequested = true;
                 ResetSeekState();
+
+                // OpenMedia は引数を AutoStart（シリアライズされる設定）へ書き込むため、自動再生だけ止めて設定は戻す
+                var autoStart = mediaPlayer.AutoStart;
                 mediaPlayer.OpenMedia(false);
+                mediaPlayer.AutoStart = autoStart;
             }
             return false;
         }
@@ -143,6 +147,9 @@ namespace HRYooba.AVPro
             var frame = (int)Math.Floor(Math.Max(0.0, time) * frameRate + FrameEpsilon);
             frame = Mathf.Min(frame, mediaPlayer.Info.GetMaxFrameNumber());
             if (frame == _seekedFrame) return;
+
+            // デコーダの準備前は新しいコマが届かず待ちが空回りするので、準備できるまで毎フレーム試す
+            if (!control.CanPlay()) return;
             _seekedFrame = frame;
 
             // 表示中のコマへのシークでは新しいコマが届かず、待ちがタイムアウトまで続く
